@@ -7,33 +7,26 @@ pragma solidity 0.8.16;
 // wArNiNg: nAmInG fUnCtIoN tYpE pArAmEtErS iS dEpReCaTeD.
 struct CursedStruct {
     function() pure returns (string memory) name;
-
     function() pure returns (string memory) symbol;
-
     function() pure returns (uint8) decimals;
-
     function(
         uint256 // slot
     ) view returns (uint256) totalSupply;
-
     function(
         mapping(address => uint256) storage, // balances,
         address // account
     ) view returns (uint256) balanceOf;
-
     function(
         mapping(address => mapping(address => uint256)) storage, // allowances,
         address, // owner,
         address // spender
     ) view returns (uint256) allowance;
-
     function(
         mapping(address => uint256) storage, // balances,
         address, // sender,
         address, // receiver,
         uint256 // amount
     ) returns (bool) transfer;
-
     function(
         mapping(address => uint256) storage, // balances,
         mapping(address => mapping(address => uint256)) storage, // allowances,
@@ -42,10 +35,9 @@ struct CursedStruct {
         address, // receiver,
         uint256 // amount
     ) returns (bool) transferFrom;
-
     function(
         mapping(address => mapping(address => uint256)) storage, // allowances,
-        address,// caller,
+        address, // caller,
         address, // spender,
         uint256 // amount
     ) returns (bool) approve;
@@ -68,7 +60,9 @@ function _decimals() pure returns (uint8) {
 
 function _totalSupply(uint256 slot) view returns (uint256) {
     uint256 supply;
-    assembly { supply := sload(slot) }
+    assembly {
+        supply := sload(slot)
+    }
     return supply;
 }
 
@@ -106,8 +100,9 @@ function _transferFrom(
     address receiver,
     uint256 amount
 ) returns (bool) {
-    uint256 allowed = allowances[sender][caller];
-    if (allowed != type(uint256).max) allowances[sender][caller] = allowed - amount;
+    uint256 allowed = allowances[caller][sender];
+    if (allowed != type(uint256).max)
+        allowances[caller][sender] = allowed - amount;
     balances[sender] -= amount;
     balances[receiver] += amount;
     return true;
@@ -127,18 +122,25 @@ function _approve(
 // CONTRACT DEFINITION
 
 contract CursedStructToken {
-
     /// @notice Logged on transfer.
     /// @param sender Sending address.
     /// @param receiver Receiving address.
     /// @param amount Amount transferred.
-    event Transfer(address indexed sender, address indexed receiver, uint256 amount);
+    event Transfer(
+        address indexed sender,
+        address indexed receiver,
+        uint256 amount
+    );
 
     /// @notice Logged on approval.
     /// @param owner Approving address.
     /// @param spender Approved address.
     /// @param amount Amount spender can transfer on behalf of owner.
-    event Approval(address indexed owner, address indexed spender, uint256 amount);
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 amount
+    );
 
     uint256 _totalSupplyAmount;
 
@@ -181,7 +183,11 @@ contract CursedStructToken {
     /// @param owner Owner address.
     /// @param spender Spender address.
     /// @return Amount spender may transfer on behalf of the owner.
-    function allowance(address owner, address spender) public view returns (uint256) {
+    function allowance(address owner, address spender)
+        public
+        view
+        returns (uint256)
+    {
         return _getCursedStruct().allowance(_allowances, owner, spender);
     }
 
@@ -190,8 +196,16 @@ contract CursedStructToken {
     /// @param receiver Receiving address.
     /// @param amount Amount to transfer.
     /// @return success True if successful transfer.
-    function transfer(address receiver, uint256 amount) public returns (bool success) {
-        success = _getCursedStruct().transfer(_balances, msg.sender, receiver, amount);
+    function transfer(address receiver, uint256 amount)
+        public
+        returns (bool success)
+    {
+        success = _getCursedStruct().transfer(
+            _balances,
+            msg.sender,
+            receiver,
+            amount
+        );
         emit Transfer(msg.sender, receiver, amount);
     }
 
@@ -224,8 +238,16 @@ contract CursedStructToken {
     /// @param spender Address to which the caller is delegating an allowance.
     /// @param amount Amount the spender is allowed to transfer on the caller's behalf.
     /// @return success True if successful approval.
-    function approve(address spender, uint256 amount) public returns (bool success) {
-        success = _getCursedStruct().approve(_allowances, msg.sender, spender, amount);
+    function approve(address spender, uint256 amount)
+        public
+        returns (bool success)
+    {
+        success = _getCursedStruct().approve(
+            _allowances,
+            msg.sender,
+            spender,
+            amount
+        );
         emit Approval(msg.sender, spender, amount);
     }
 
